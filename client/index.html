@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chat App WebSocket</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    #chat::-webkit-scrollbar {
+      width: 6px;
+    }
+    #chat::-webkit-scrollbar-thumb {
+      background-color: #cbd5e0;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-gray-100 to-gray-200 h-screen flex flex-col">
+
+  <header class="bg-white shadow-md p-4 flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <img src="https://via.placeholder.com/40" alt="Avatar" class="rounded-full w-10 h-10">
+      <div>
+        <h1 class="text-lg font-bold text-gray-800">Chat Room</h1>
+      </div>
+    </div>
+    <div id="connectionStatus" class="text-sm font-semibold text-red-500">
+      Disconnected
+    </div>
+  </header>
+
+  <main id="chat" class="flex-1 overflow-y-auto p-6 space-y-4">
+    <!-- Chat messages will appear here -->
+  </main>
+
+  <footer class="bg-white shadow-inner p-4 flex flex-col gap-3">
+    <input 
+      id="nameInput"
+      type="text" 
+      placeholder="Enter your name..." 
+      class="border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+    >
+    <div class="flex gap-2">
+      <input 
+        id="messageInput"
+        type="text" 
+        placeholder="Type a message..." 
+        class="flex-1 border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+      >
+      <button 
+        id="sendButton"
+        class="bg-blue-500 hover:bg-blue-600 transition text-white rounded-full px-5 py-2 font-semibold shadow-md"
+      >
+        Send
+      </button>
+    </div>
+  </footer>
+
+  <script>
+    let socket;
+    let reconnectInterval;
+    const connectionStatus = document.getElementById('connectionStatus');
+    const chat = document.getElementById('chat');
+    const nameInput = document.getElementById('nameInput');
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+
+    function connectWebSocket() {
+  if (socket && socket.readyState !== WebSocket.CLOSED) {
+    socket.close();
+  }
+
+  socket = new WebSocket('ws://localhost:3002');
+
+  socket.addEventListener('open', () => {
+    updateConnectionStatus(true);
+    appendMessage('System', 'Connected to WebSocket Server', false);
+    clearInterval(reconnectInterval);
+    reconnectInterval = null;
+  });
+
+  socket.addEventListener('close', () => {
+    updateConnectionStatus(false);
+    appendMessage('System', 'Disconnected from WebSocket Server', false);
+    tryReconnect();  // Ensure this runs only once after disconnection
+  });
+
+  socket.addEventListener('error', (err) => {
+    console.error('WebSocket error:', err);
+    updateConnectionStatus(false);
+    socket.close();
+  });
+
+  socket.addEventListener('message', (event) => {
+    try {
+      const { name, message } = JSON.parse(event.data);
+      appendMessage(name, message, false);
+    } catch (e) {
+      console.error('Invalid message format:', event.data);
+    }
+  });
+}
+
+function tryReconnect() {
+  if (!reconnectInterval) {
+    reconnectInterval = setInterval(() => {
+      console.log('Trying to reconnect...');
+      connectWebSocket();
+      clearInterval(reconnectInterval); // Membatalkan interval setelah sekali reconnect
+      reconnectInterval = null;
+    }, 9000);
+  }
+}
+
+
+
+    function updateConnectionStatus(isConnected) {
+      connectionStatus.textContent = isConnected ? 'Connected' : 'Disconnected';
+      connectionStatus.className = `text-sm font-semibold ${isConnected ? 'text-green-500' : 'text-red-500'}`;
+    }
+
+    function appendMessage(author, text, self = false) {
+      const bubbleColor = self ? 'bg-blue-200 text-blue-700' : 'bg-gray-200 text-gray-700';
+      const msgDiv = document.createElement('div');
+      msgDiv.className = `flex ${self ? 'justify-end' : 'justify-start'}`;
+      msgDiv.innerHTML = `
+        <div class="max-w-xs ${bubbleColor} p-3 rounded-lg shadow text-sm">
+          <strong class="block mb-1">${author}</strong>
+          <span>${text}</span>
+        </div>
+      `;
+      chat.appendChild(msgDiv);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    sendButton.addEventListener('click', () => {
+      const name = nameInput.value.trim();
+      const message = messageInput.value.trim();
+      if (!name || !message) {
+        alert('Please enter your name and message!');
+        return;
+      }
+
+      if (socket.readyState === WebSocket.OPEN) {
+        const data = { name, message };
+        socket.send(JSON.stringify(data));
+        appendMessage(name, message, true);
+        messageInput.value = '';
+        messageInput.focus();
+      } else {
+        alert('Connection lost. Message not sent.');
+      }
+    });
+
+    messageInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        sendButton.click();
+      }
+    });
+
+    connectWebSocket();
+  </script>
+</body>
+</html>

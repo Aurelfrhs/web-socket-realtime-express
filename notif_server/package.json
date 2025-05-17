@@ -1,0 +1,27 @@
+{
+  "name": "notif_server",
+  "version": "1.0.0",
+  "description": "notif realtime",
+  "main": "server.js",
+  "scripts": {
+    "test": "npm test",
+    "start": "npx nodemon server.js"
+  },
+  "keywords": [
+    "notif_server",
+    "notif",
+    "WebSocket",
+    "server"
+  ],
+  "author": "Aurel",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^2.2.0",
+    "cars": "^1.1.6",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "http": "^0.0.1-security",
+    "nodemon": "^3.1.10",
+    "ws": "^8.18.1"
+  }
+}
