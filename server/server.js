@@ -4,6 +4,7 @@ const WebSocket = require('ws');
 const http = require('http');
 const clients = new Set();
 const path = require('path');
+const cors = require('cors')
 
 const app = express();
 app.use(bodyParser.json());
@@ -14,14 +15,23 @@ const wss = new WebSocket.Server({ server });
 const port = 3000;
 const hostName = '127.0.0.1';
 const authRoutes = require("./routes/authRoutes")
+const majorRoutes = require("./routes/majorRoutes")
 const studentRoutes = require("./routes/studentRoutes")
-
-const { Sequelize } = require('sequelize');
 const db = require('./models');
+const postingRoutes = require('./routes/postingRoutes');
+const commentRoutes = require('./routes/commentRoutes');
 
-app.use('/v1/auth', authRoutes(express));
-app.use('/v1/student', studentRoutes(express));
 
+const corsOption = {
+    origin: ('http://localhost/5173')
+};
+
+
+app.use('/v1/auth', cors(corsOption), authRoutes(express))
+app.use('/v1/student', studentRoutes(express))
+app.use('/v1/comment', commentRoutes(express))
+app.use('/v1/post', postingRoutes(express))
+app.use('/v1', cors(corsOption), majorRoutes(express))
 app.get('/', async (req, res) => {
     try {
         await sequelize.authenticate();
