@@ -1,6 +1,6 @@
 const { body } = require('express-validator')
 const auth_ctrl = require('../controller/auth_ctrl')
-const { user, student, role, student_user, role_user, major} = require("../models")
+const { user, major} = require("../models")
 const bcryptjs = require('bcryptjs')
 const { authenticateJWT } = require('../middleware/authMiddleware')
 
@@ -57,9 +57,9 @@ module.exports = (app) => {
         body('password').isLength({ min: 6, max: 100 }).isString().notEmpty(),
         body('firstname').isString().notEmpty(),
         body('lastname').isString().notEmpty(),
-        body('classes').isString().notEmpty().custom(async(value) => {
+        body('classes').isString().notEmpty().custom(async (value) => {
             const classValue = ["X", "XI", "XII"]
-            const isValid = await classValue.includes(value)
+            const isValid = classValue.includes(value)
         
                 console.log(`IS VALID: ${isValid}`)
         
@@ -67,17 +67,14 @@ module.exports = (app) => {
                     throw new Error('Classes is not registered!')
                 }
             }),
-        body('gender').isString().notEmpty().custom(async(value) => {
-            const genderValue = ["M", "F"]
-            const isValid = await genderValue.includes(value)
-        
-                console.log(`IS VALID: ${isValid}`)
-        
+        body('gender').isString().notEmpty().custom(async (value) => {
+            const genderVal = ["M", "F"]
+            const isValid = await genderVal.includes(value)
                 if (!isValid) {
                     throw new Error('Gender is not registered!')
                 }
             }),
-        body('major_id').isString().notEmpty().custom(async(value) => {
+        body('major_id').isString().notEmpty().custom(async (value) => {
             const majorValue = await major.findByPk(value)
                 if (!!majorValue == false) {
                     throw new Error('Major is not registered!')

@@ -1,9 +1,9 @@
 import { configureStore } from "@reduxjs/toolkit"
-import  persistedReducer  from "./rootReducer"
+import persistedReducer from "./rootReducer"
 
 export const store = configureStore({
     reducer: persistedReducer,
-    devTools: import.meta.MODE === 'development',
+    devTools: true,
     middleware: (getDefaultMiddleware) => getDefaultMiddleware({
         serializableCheck: false
     })
